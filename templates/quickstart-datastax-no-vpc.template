@@ -10,28 +10,50 @@
                 "Parameters": [
                     "AvailabilityZones",
                     "AccessLocation",
-                    "PrivateSubnetCIDR",
+                    "VPCId",
+                    "VPCCIDR",
                     "PrivateSubnets",
-                    "PublicSubnetId",
-                    "VPCId"
+                    "PublicSubnetId"
                 ]
             }, {
             "Label": {
                 "default": "Datastax Setup"
             },
             "Parameters": [
+                "ClusterName",
                 "KeyName",
                 "DSAcademyUser",
                 "DSAcademyPW",
                 "DSEVersion",
-                "DBPassword",
-                "OpsCPassword",
-                "NumberDCs",
-                "DataCenters",
-                "Instances",
-                "DCSizes",
-                "VolumeSizes",
-                "ClusterName"
+                "DBPassword"
+            ]
+            }, {
+            "Label": {
+                "default": "OpsCenter Setup"
+            },
+            "Parameters": [
+                "OpsCenterInstanceType",
+                "OpsCPassword"
+            ]
+            }, {
+            "Label": {
+                "default": "1st Datacenter & Node Setup"
+            },
+            "Parameters": [
+                "DC0Size",
+                "DC0Name",
+                "DC0Instance",
+                "DC0VolumeSize"
+            ]
+            }, {
+            "Label": {
+                "default": "(Optional) 2nd Datacenter & Node Setup"
+            },
+            "Parameters": [
+                "DC1Size",
+                "DC1Name",
+                "DC1Instance",
+                "DC1VolumeSize"
             ]
             }, {
             "Label": {
@@ -52,38 +74,47 @@
                 "KeyName": {
                     "default": "Key Name"
                 },
+                "DSEVersion": {
+                  "default": "DSE version"
+                },
                 "DSAcademyUser": {
                     "default": "DataStax Academy Username"
                 },
                 "DBPassword": {
                     "default": "Database Password"
                 },
-                "DSEVersion": {
-                  "default": "DSE version"
-                },
-                "DataCenters": {
-                    "default": "Data Center Names"
-                },
                 "DSAcademyPW": {
                     "default": "DataStax Academy Password"
-                },
-                "NumberDCs": {
-                    "default": "Number of Data Centers"
                 },
                 "OpsCPassword": {
                     "default": "OpsCenter Password"
                 },
-                "Instances": {
-                    "default": "Instances Types"
+                "DC0Size": {
+                    "default": "1st Data Center Size"
                 },
-                "DCSizes": {
-                    "default": "Data Center Sizes"
+                "DC0Name": {
+                    "default": "1st Data Center Name"
+                },
+                "DC0Instance": {
+                    "default": "1st Data Center Instances Type"
+                },
+                "DC0VolumeSize": {
+                    "default": "1st Data Center Volume Size"
+                },
+                "DC1Size": {
+                    "default": "2nd Data Center Size"
+                },
+                "DC1Name": {
+                    "default": "2nd Data Center Name"
+                },
+                "DC1Instance": {
+                    "default": "2nd Data Center Instances Type"
+                },
+                "DC1VolumeSize": {
+                    "default": "2nd Data Center Volume Size"
                 },
                 "ClusterName": {
                     "default": "Cluster Name"
-                },
-                "VolumeSizes": {
-                    "default": "Volume Sizes"
                 },
                 "QSS3BucketName": {
                     "default": "Quick Start S3 Bucket Name"
@@ -97,8 +128,8 @@
                 "PrivateSubnets": {
                     "default": "Private Subnets"
                 },
-                "PrivateSubnetCIDR": {
-                    "default": "Private Subnet CIDR"
+                "VPCCIDR": {
+                    "default": "VPC CIDR"
                 },
                 "PublicSubnetId": {
                     "default": "Public Subnet ID"
@@ -120,20 +151,20 @@
             "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
             "ConstraintDescription": "must be a valid IP CIDR range of the form x.x.x.x/x."
         },
-        "VPCId": {
-            "Description": "Id of existing VPC",
-            "Type": "AWS::EC2::VPC::Id"
-        },
         "AvailabilityZones": {
             "Type": "CommaDelimitedList",
             "Description": "The list of Availability Zones to use for the subnets in the VPC. The Quick Start uses three Availability Zones from your list and preserves the logical order you specify."
+        },
+        "VPCId": {
+            "Description": "Id of existing VPC",
+            "Type": "AWS::EC2::VPC::Id"
         },
         "PrivateSubnets": {
             "Type": "CommaDelimitedList",
             "Description": "List of private subnet ids to deploy nodes into"
         },
-        "PrivateSubnetCIDR": {
-            "Description": "CIDR block covering private subnets.",
+        "VPCCIDR": {
+            "Description": "CIDR block of the VPC",
             "Type": "String"
         },
         "PublicSubnetId": {
@@ -165,37 +196,97 @@
             "Description": "Password for default DSE OpsCenter administrator.",
             "NoEcho": true
         },
-        "NumberDCs": {
+        "DC0Size": {
+            "Description": "The number of nodes to create in the 1st DSE datacenter.",
             "Type": "Number",
-            "Description": "The number of DSE data centers to create. Using multiple data centers enables you to separate your workloads by type.",
-            "Default": 1,
-            "AllowedValues": [1, 2, 3, 4],
-            "ConstraintDescription": "Value must be an integer from 1-4"
+            "Default": 3,
+            "AllowedValues": [3, 4, 5, 6, 7, 8, 9],
+            "ConstraintDescription": "Value must be an integer from 3-9"
         },
-        "DataCenters": {
-            "Description": "The list of data center names to create, separated by commas. The number of names must match the NumberDCs parameter.",
-            "Type": "CommaDelimitedList",
+        "DC0Name": {
+            "Description": "Name of the 1st Data Center.",
+            "Type": "String",
             "Default": "DC0"
         },
-        "Instances": {
-            "Description": "EC2 instance type for the nodes in each DSE data center, separated by commas. The number of instance types must match the NumberDCs parameter.",
-            "Type": "CommaDelimitedList",
-            "Default": "m4.large"
+        "DC0Instance": {
+            "Description": "EC2 instance type for the nodes in each DSE datacenter.",
+            "Type": "String",
+            "AllowedValues": [
+                "t2.medium",
+                "m4.large",
+                "m4.xlarge",
+                "m4.2xlarge",
+                "m4.4xlarge",
+                "m4.10xlarge",
+                "c4.large",
+                "c4.xlarge",
+                "c4.2xlarge",
+                "c4.4xlarge",
+                "i3.xlarge",
+                "i3.2xlarge",
+                "i3.4xlarge"
+            ],
+            "Default": "m4.xlarge"
         },
-        "VolumeSizes": {
-            "Description": "The EBS volume size, in GiB, for the nodes in each data center, separated by commas. The number of volume sizes in this array must match the NumberDCs parameter.",
-            "Type": "List<Number>",
-            "Default": "1024"
+        "DC0VolumeSize": {
+            "Description": "The EBS volume size, in GiB, for the nodes in each datacenter.",
+            "Type": "Number",
+            "AllowedValues": [1024, 2048],
+            "Default": 1024
         },
-        "DCSizes": {
-            "Description": "The number of nodes to create for each DSE data center, separated by commas. The number of sizes in this array must match the NumberDCs parameter.",
-            "Type": "List<Number>",
-            "Default": "3"
+        "DC1Size": {
+            "Description": "The number of nodes to create in the 2nd DSE datacenter. Select 0 if you need only 1 Data Center. If you want to split your workloads with different set of nodes, you can choose to deploy a 2nd Data Center. The 2nd Data Center can have different configuration i.e instance type, volume size etc. for the nodes.",
+            "Type": "Number",
+            "Default": 0,
+            "AllowedValues": [0, 3, 4, 5, 6, 7, 8, 9],
+            "ConstraintDescription": "Value must be an integer from 3-9 or 0 if you dont need a second datacenter."
+        },
+        "DC1Name": {
+            "Description": "Name of the 2nd Data Center.",
+            "Type": "String",
+            "Default": "DC1"
+        },
+        "DC1Instance": {
+            "Description": "EC2 instance type for the nodes in the 2nd Data Center.",
+            "Type": "String",
+            "AllowedValues": [
+                "t2.medium",
+                "m4.large",
+                "m4.xlarge",
+                "m4.2xlarge",
+                "m4.4xlarge",
+                "m4.10xlarge",
+                "c4.large",
+                "c4.xlarge",
+                "c4.2xlarge",
+                "c4.4xlarge",
+                "i3.xlarge",
+                "i3.2xlarge",
+                "i3.4xlarge"
+            ],
+            "Default": "m4.xlarge"
+        },
+        "DC1VolumeSize": {
+            "Description": "The EBS volume size, in GiB, for the nodes in 2nd datacenter.",
+            "Type": "Number",
+            "AllowedValues": [1024, 2048],
+            "Default": 1024
         },
         "ClusterName": {
             "Description": "The name of the DSE cluster. This is the name used by DSE OpsCenter.",
             "Type": "String",
             "Default": "DSE Cluster"
+        },
+        "OpsCenterInstanceType": {
+            "Description": "Node EC2 instance type",
+            "Type": "String",
+            "Default": "m4.2xlarge",
+            "AllowedValues": [
+                "m4.large",
+                "m4.xlarge",
+                "m4.2xlarge"
+            ],
+            "ConstraintDescription": "must be a valid EC2 instance type."
         },
         "QSS3BucketName": {
             "AllowedPattern": "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$",
@@ -221,35 +312,12 @@
             ]
         },
         "CreateDC1": {
-            "Fn::Or": [{
-                "Fn::Equals": [{
-                    "Ref": "NumberDCs"
-                }, 2]
-            }, {
-            "Fn::Equals": [{
-                "Ref": "NumberDCs"
-            }, 3]
-            }, {
-            "Fn::Equals": [{
-                "Ref": "NumberDCs"
-            }, 4]
-            }]
-        },
-        "CreateDC2": {
-            "Fn::Or": [{
-                "Fn::Equals": [{
-                    "Ref": "NumberDCs"
-                }, 3]
-            }, {
-            "Fn::Equals": [{
-                "Ref": "NumberDCs"
-            }, 4]
-            }]
-        },
-        "CreateDC3": {
-            "Fn::Equals": [{
-                "Ref": "NumberDCs"
-            }, 4]
+            "Fn::Not" : [{
+                "Fn::Equals" : [
+                   {"Ref" : "DC1Size"},
+                   0
+                ]
+             }]
         }
     },
     "Resources": {
@@ -280,19 +348,18 @@
             "Properties": {
                 "PolicyName": "s3-access",
                 "PolicyDocument": {
-                    "Statement": [{
-                        "Action": [
-                            "s3:GetObject",
-                            "s3:DeleteObject",
-                            "s3:PutObject"
-                        ],
-                        "Resource": {
-                            "Fn::Join": ["", ["arn:aws:s3:::", {
-                                "Ref": "S3Bucket"
-                            }, "/*"]]
+                    "Statement": [
+                        {
+                        "Effect": "Allow",
+                        "Action": ["s3:GetObject", "s3:DeleteObject", "s3:PutObject"],
+                        "Resource": {"Fn::Join": ["", ["arn:aws:s3:::", {"Ref": "S3Bucket"}, "/*"]]}
                         },
-                        "Effect": "Allow"
-                    }]
+                        {
+                            "Effect": "Allow",
+                            "Action": ["s3:ListBucket"],
+                            "Resource": {"Fn::Join": ["", ["arn:aws:s3:::", {"Ref": "S3Bucket"}]]}
+                        }
+                    ]
                 },
                 "Roles": [{
                     "Ref": "S3RoleOpsC"
@@ -380,21 +447,21 @@
                 "FromPort": 8888,
                 "ToPort": 8888,
                 "CidrIp": {
-                    "Ref": "PrivateSubnetCIDR"
+                    "Ref": "VPCCIDR"
                 }
                 }, {
                 "IpProtocol": "tcp",
                 "FromPort": 22,
                 "ToPort": 22,
                 "CidrIp": {
-                    "Ref": "PrivateSubnetCIDR"
+                    "Ref": "VPCCIDR"
                 }
                 }, {
                 "IpProtocol": "tcp",
                 "FromPort": 61620,
                 "ToPort": 61620,
                 "CidrIp": {
-                    "Ref": "PrivateSubnetCIDR"
+                    "Ref": "VPCCIDR"
                 }
                 }]
             }
@@ -428,13 +495,11 @@
                     "ClusterName": {
                         "Ref": "ClusterName"
                     },
-                    "NumberDCs": {
-                        "Ref": "NumberDCs"
+                    "DC0Size": {
+                            "Ref": "DC0Size"
                     },
-                    "DCSizes": {
-                        "Fn::Join": [",", {
-                            "Ref": "DCSizes"
-                        }]
+                    "DC1Size": {
+                            "Ref": "DC1Size"
                     },
                     "DSEVersion": {
                       "Ref": "DSEVersion"
@@ -457,7 +522,9 @@
                     "S3Bucket": {
                         "Ref": "S3Bucket"
                     },
-                    "InstanceType": "t2.medium"
+                    "InstanceType": {
+                      "Ref": "OpsCenterInstanceType"
+                    }
                 }
             }
         },
@@ -497,24 +564,16 @@
                         "Ref": "ClusterName"
                     },
                     "DataCenterName": {
-                        "Fn::Select": ["0", {
-                            "Ref": "DataCenters"
-                        }]
+                        "Ref": "DC0Name"
                     },
                     "DataCenterSize": {
-                        "Fn::Select": ["0", {
-                            "Ref": "DCSizes"
-                        }]
+                        "Ref": "DC0Size"
                     },
                     "InstanceType": {
-                        "Fn::Select": ["0", {
-                            "Ref": "Instances"
-                        }]
+                        "Ref": "DC0Instance"
                     },
                     "VolumeSize": {
-                        "Fn::Select": ["0", {
-                            "Ref": "VolumeSizes"
-                        }]
+                        "Ref": "DC0VolumeSize"
                     },
                     "VPC": {
                         "Ref": "VPCId"
@@ -530,7 +589,7 @@
                         }]
                     },
                     "SecurityCIDR": {
-                        "Ref": "PrivateSubnetCIDR"
+                        "Ref": "VPCCIDR"
                     }
                 }
             }
@@ -572,24 +631,16 @@
                         "Ref": "ClusterName"
                     },
                     "DataCenterName": {
-                        "Fn::Select": ["1", {
-                            "Ref": "DataCenters"
-                        }]
+                        "Ref": "DC1Name"
                     },
                     "DataCenterSize": {
-                        "Fn::Select": ["1", {
-                            "Ref": "DCSizes"
-                        }]
+                        "Ref": "DC1Size"
                     },
                     "InstanceType": {
-                        "Fn::Select": ["1", {
-                            "Ref": "Instances"
-                        }]
+                        "Ref": "DC1Instance"
                     },
                     "VolumeSize": {
-                        "Fn::Select": ["1", {
-                            "Ref": "VolumeSizes"
-                        }]
+                        "Ref": "DC1VolumeSize"
                     },
                     "VPC": {
                         "Ref": "VPCId"
@@ -605,157 +656,7 @@
                         }]
                     },
                     "SecurityCIDR": {
-                        "Ref": "PrivateSubnetCIDR"
-                    }
-                }
-            }
-        },
-        "DC2stack": {
-            "Type": "AWS::CloudFormation::Stack",
-            "Condition": "CreateDC2",
-            "Properties": {
-                "TemplateURL": {
-                    "Fn::Sub": [
-                        "https://${QSS3BucketName}.${S3Region}.amazonaws.com/${QSS3KeyPrefix}templates/datacenter.template", {
-                            "S3Region": {
-                                "Fn::If": [
-                                    "GovCloudCondition",
-                                    "s3-us-gov-west-1",
-                                    "s3"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                "Parameters": {
-                    "KeyName": {
-                        "Ref": "KeyName"
-                    },
-                    "Profile": {
-                        "Ref": "S3ProfileNode"
-                    },
-                    "S3Bucket": {
-                        "Ref": "S3Bucket"
-                    },
-                    "OpsCenterIP": {
-                        "Fn::GetAtt": ["OpsCenterstack", "Outputs.OpsCenterPrivateIP"]
-                    },
-                    "OpsCPassword": {
-                        "Ref": "OpsCPassword"
-                    },
-                    "ClusterName": {
-                        "Ref": "ClusterName"
-                    },
-                    "DataCenterName": {
-                        "Fn::Select": ["2", {
-                            "Ref": "DataCenters"
-                        }]
-                    },
-                    "DataCenterSize": {
-                        "Fn::Select": ["2", {
-                            "Ref": "DCSizes"
-                        }]
-                    },
-                    "InstanceType": {
-                        "Fn::Select": ["2", {
-                            "Ref": "Instances"
-                        }]
-                    },
-                    "VolumeSize": {
-                        "Fn::Select": ["2", {
-                            "Ref": "VolumeSizes"
-                        }]
-                    },
-                    "VPC": {
-                        "Ref": "VPCId"
-                    },
-                    "AvailabilityZones": {
-                        "Fn::Join": [",", {
-                            "Ref": "AvailabilityZones"
-                        }]
-                    },
-                    "Subnets": {
-                        "Fn::Join": [",", {
-                            "Ref": "PrivateSubnets"
-                        }]
-                    },
-                    "SecurityCIDR": {
-                        "Ref": "PrivateSubnetCIDR"
-                    }
-                }
-            }
-        },
-        "DC3stack": {
-            "Type": "AWS::CloudFormation::Stack",
-            "Condition": "CreateDC3",
-            "Properties": {
-                "TemplateURL": {
-                    "Fn::Sub": [
-                        "https://${QSS3BucketName}.${S3Region}.amazonaws.com/${QSS3KeyPrefix}templates/datacenter.template", {
-                            "S3Region": {
-                                "Fn::If": [
-                                    "GovCloudCondition",
-                                    "s3-us-gov-west-1",
-                                    "s3"
-                                ]
-                            }
-                        }
-                    ]
-                },
-                "Parameters": {
-                    "KeyName": {
-                        "Ref": "KeyName"
-                    },
-                    "Profile": {
-                        "Ref": "S3ProfileNode"
-                    },
-                    "S3Bucket": {
-                        "Ref": "S3Bucket"
-                    },
-                    "OpsCenterIP": {
-                        "Fn::GetAtt": ["OpsCenterstack", "Outputs.OpsCenterPrivateIP"]
-                    },
-                    "OpsCPassword": {
-                        "Ref": "OpsCPassword"
-                    },
-                    "ClusterName": {
-                        "Ref": "ClusterName"
-                    },
-                    "DataCenterName": {
-                        "Fn::Select": ["3", {
-                            "Ref": "DataCenters"
-                        }]
-                    },
-                    "DataCenterSize": {
-                        "Fn::Select": ["3", {
-                            "Ref": "DCSizes"
-                        }]
-                    },
-                    "InstanceType": {
-                        "Fn::Select": ["3", {
-                            "Ref": "Instances"
-                        }]
-                    },
-                    "VolumeSize": {
-                        "Fn::Select": ["3", {
-                            "Ref": "VolumeSizes"
-                        }]
-                    },
-                    "VPC": {
-                        "Ref": "VPCId"
-                    },
-                    "AvailabilityZones": {
-                        "Fn::Join": [",", {
-                            "Ref": "AvailabilityZones"
-                        }]
-                    },
-                    "Subnets": {
-                        "Fn::Join": [",", {
-                            "Ref": "PrivateSubnets"
-                        }]
-                    },
-                    "SecurityCIDR": {
-                        "Ref": "PrivateSubnetCIDR"
+                        "Ref": "VPCCIDR"
                     }
                 }
             }
@@ -766,6 +667,12 @@
             "Value": {
                 "Fn::GetAtt": ["OpsCenterstack", "Outputs.OpsCenterURL"]
             }
+        },
+        "OpsCenterPublicIP": {
+            "Value": {
+                "Fn::GetAtt": ["OpsCenterstack", "Outputs.OpsCenterPublicIP"]
+            },
+            "Description": "Public IP for OpsCenter"
         }
     }
 }
